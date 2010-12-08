@@ -1,12 +1,10 @@
 #ifdef GLX
 #include <GL/glx.h>
 #include <sys/unistd.h>
-struct timeval tvx,tvy;
 #define EV(y) ev.x##y
 #else
 #include <SDL.h>
 #include <SDL_opengl.h>
-Uint32 tvx,tvy;
 #define ButtonPress SDL_MOUSEBUTTONDOWN
 #define ButtonRelease SDL_MOUSEBUTTONUP
 #define MotionNotify SDL_MOUSEMOTION
@@ -28,7 +26,7 @@ int main(int argc,char**argv){
 	#else
 	Display*dpy=XOpenDisplay(0);
 	XVisualInfo*vi=glXChooseVisual(dpy,DefaultScreen(dpy),(int[]){GLX_RGBA,GLX_DOUBLEBUFFER,None});
-	Window Wdo=XCreateWindow(dpy,RootWindow(dpy,vi->screen),0,0,512,512,0,vi->depth,InputOutput,vi->visual,CWColormap|CWEventMask,(XSetWindowAttributes[]){{.colormap=XCreateColormap(dpy,RootWindow(dpy,vi->screen),vi->visual,AllocNone),.event_mask=PointerMotionMask|KeyPressMask|KeyReleaseMask|ButtonPressMask|ButtonReleaseMask}});
+	Window Wdo=XCreateWindow(dpy,RootWindow(dpy,vi->screen),0,0,512,512,0,vi->depth,InputOutput,vi->visual,CWColormap|CWEventMask,(XSetWindowAttributes[]){{.colormap=XCreateColormap(dpy,RootWindow(dpy,vi->screen),vi->visual,AllocNone),.event_mask=PointerMotionMask|ButtonPressMask|ButtonReleaseMask}});
 	XSetWMProtocols(dpy,Wdo,(Atom[]){XInternAtom(dpy,"WM_DELETE_WINDOW",False)},1);
 	XMapWindow(dpy,Wdo);
 	glXMakeCurrent(dpy,Wdo,glXCreateContext(dpy,vi,0,GL_TRUE));
@@ -49,13 +47,11 @@ int main(int argc,char**argv){
 		glXSwapBuffers(dpy,Wdo);
 		XEvent ev;
 		while(XPending(dpy)){
-			KeySym ks;
 			XNextEvent(dpy,&ev);
 		#else
 		SDL_GL_SwapBuffers();
 		SDL_Event ev;
 		while(SDL_PollEvent(&ev)){
-			SDLKey ks;
 		#endif
 			switch(ev.type){
 			case(MotionNotify)
@@ -82,11 +78,11 @@ int main(int argc,char**argv){
 				int b=0;
 				for(int i=0;i<ep;i++)b+=exy[i][0]<=mx2&&exy[i][0]>=mx1&&exy[i][1]<=my2&&exy[i][1]>=my1;
 				if(b){
-					en+=(b*b<<3)+b*96<<2;
+					en+=(b*(b-1)<<6)+b*96<<2;
 					for(int i=0;i<ep;){
 						en+=(exy[i][2]+!!exy[i][3]>>1)+1<<3;
-						if(exy[i][0]<=mx2+b*b&&exy[i][0]>=mx1-b*b&&exy[i][1]<=my2+b*b&&exy[i][1]>=my1-b*b){
-							memmove(exy[i],exy[i+1],sizeof(short)*4*(ep-i));
+						if(exy[i][0]<=mx2+b*b*b&&exy[i][0]>=mx1-b*b*b&&exy[i][1]<=my2+b*b*b&&exy[i][1]>=my1-b*b*b){
+							memmove(exy[i],exy[i+1],ep-i<<3);
 							ep--;
 							continue;
 						}
@@ -114,7 +110,7 @@ int main(int argc,char**argv){
 			exy[i][0]+=exy[i][2];
 			exy[i][1]+=exy[i][3];
 			if(exy[i][0]>512){
-				memmove(exy[i],exy[i+1],sizeof(short)*4*(ep-i));
+				memmove(exy[i],exy[i+1],ep-i<<3);
 				ep--;
 				en-=exy[i][2];
 				continue;
@@ -131,9 +127,9 @@ int main(int argc,char**argv){
 			glEnd();
 		}
 		#ifdef GLX
-		usleep((300000-en)/5);//30000);
+		usleep(60000-en/5);
 		#else
-		SDL_Delay(30);
+		SDL_Delay(60-en/5000);
 		#endif
 	}
 }
