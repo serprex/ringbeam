@@ -47,11 +47,13 @@ int main(int argc,char**argv){
 		glXSwapBuffers(dpy,Wdo);
 		XEvent ev;
 		while(XPending(dpy)){
+			KeySym ks;
 			XNextEvent(dpy,&ev);
 		#else
 		SDL_GL_SwapBuffers();
 		SDL_Event ev;
 		while(SDL_PollEvent(&ev)){
+			SDLKey ks;
 		#endif
 			switch(ev.type){
 			case(MotionNotify)
