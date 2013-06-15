@@ -1,5 +1,5 @@
 ifneq ($(GLX),)
-CFLAGS=-DGLX
+CFLAGS=-DGLX -lX11
 else
 CFLAGS=-DSDL `sdl-config --cflags` `sdl-config --libs`
 endif
