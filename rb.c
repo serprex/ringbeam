@@ -22,7 +22,8 @@ int main(int argc,char**argv){
 		return 1;
 	}
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
-	SDL_Surface*dpy=SDL_SetVideoMode(512,512,0,SDL_OPENGL);
+	SDL_Window*dpy=SDL_CreateWindow(0,SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,512,512,SDL_WINDOW_OPENGL);
+	SDL_GL_CreateContext(dpy);
 	#else
 	Display*dpy=XOpenDisplay(0);
 	XVisualInfo*vi=glXChooseVisual(dpy,DefaultScreen(dpy),(int[]){GLX_RGBA,GLX_DOUBLEBUFFER,None});
@@ -43,17 +44,15 @@ int main(int argc,char**argv){
 	glOrtho(0,512,512,0,1,-1);
 	glColor3ub(255,255,255);
 	for(;;){
-		#ifdef GLX
+		#ifdef SDL
+		SDL_GL_SwapWindow(dpy);
+		SDL_Event ev;
+		while(SDL_PollEvent(&ev)){
+		#else
 		glXSwapBuffers(dpy,Wdo);
 		XEvent ev;
 		while(XPending(dpy)){
-			KeySym ks;
 			XNextEvent(dpy,&ev);
-		#else
-		SDL_GL_SwapBuffers();
-		SDL_Event ev;
-		while(SDL_PollEvent(&ev)){
-			SDLKey ks;
 		#endif
 			switch(ev.type){
 			case(MotionNotify)
